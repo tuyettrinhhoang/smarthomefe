@@ -1,0 +1,153 @@
+.app-sidebar {
+  width: 72px;
+  background: #f9fbfd;
+  border-right: 1px solid #e7edf3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 30px;
+}
+
+.app-sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.app-nav-btn,
+.app-nav-ghost {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: #95a0ae;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.app-nav-btn.active {
+  background: #ffffff;
+  color: #5f9bf5;
+}
+
+.app-nav-btn.blue,
+.app-nav-btn.active.blue {
+  background: #5f9bf5;
+  color: white;
+  box-shadow: 0 8px 18px rgba(95, 155, 245, 0.24);
+}
+
+.app-nav-btn.ghost {
+  background: transparent;
+  color: #95a0ae;
+  box-shadow: none;
+}
+
+.app-nav-btn:hover,
+.app-nav-ghost:hover {
+  transform: translateY(-1px);
+}
+
+.app-topbar {
+  height: 74px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8edf2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  gap: 16px;
+}
+
+.app-topbar-left {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-topbar-left h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.app-avatar {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #e9c67b, #6bb5f3);
+}
+
+.app-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-search-box {
+  width: 430px;
+  height: 44px;
+  border: 1px solid #cfd9e4;
+  border-radius: 22px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  color: #8d95a4;
+}
+
+.app-search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #475066;
+}
+
+.app-bell-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #30384a;
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  .app-topbar {
+    height: auto;
+    padding: 18px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .app-topbar-right {
+    flex-wrap: wrap;
+  }
+
+  .app-search-box {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .app-sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    padding: 14px;
+  }
+
+  .app-sidebar-links {
+    flex-direction: row;
+  }
+}

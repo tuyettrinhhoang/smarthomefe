@@ -1,0 +1,194 @@
+/* Fonts, colors, radius, shadow, transitions, hover */
+:root {
+  --font-base: 14px;
+  --font-heading-h1: 34px;
+  --font-heading-h2: 28px;
+  --font-heading-h3: 18px;
+  --font-weight-normal: 500;
+  --font-weight-bold: 700;
+  --font-weight-extra-bold: 800;
+
+  --color-bg: #ffffff;
+  --color-bg-muted: #f4f8fb;
+  --color-border: #e8edf2;
+  --color-text: #283042;
+  --color-text-muted: #8d95a4;
+  --color-primary: #5f9bf5;
+  --color-success: #19c450;
+  --color-danger: #ff4b4b;
+  --color-sidebar-bg: #f9fbfd;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 28px;
+
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  --transition-fast: 0.2s ease;
+}
+
+/* Dark mode */
+.dark-mode {
+  --color-bg: #1f2430;
+  --color-bg-muted: #2b3040;
+  --color-border: #3a4354;
+  --color-text: #f3f4f6;
+  --color-text-muted: #c7cfdb;
+  --color-sidebar-bg: #252b38;
+  --color-primary: #4f8ff5;
+}
+
+/* Body */
+body {
+  font-family: "Inter", sans-serif;
+  font-size: var(--font-base);
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Cards, buttons, toggle, hover */
+.device-card,
+.home-device-card,
+.timer-item-card,
+.home-circle-card,
+.home-energy-card,
+.settings-card,
+.timer-stat-card {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 26px rgba(31, 45, 89, 0.08);
+  transition: all var(--transition-fast);
+}
+
+.device-card:hover,
+.home-device-card:hover,
+.timer-item-card:hover,
+.home-circle-card:hover,
+.settings-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(31, 45, 89, 0.12);
+}
+
+/* Buttons */
+button, .btn-primary, .btn-secondary {
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+button:hover, .btn-primary:hover, .btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+/* Toggle */
+.device-switch, .toggle-switch, .home-device-switch {
+  border-radius: var(--radius-pill);
+  position: relative;
+  transition: all var(--transition-fast);
+}
+.device-switch-knob, .toggle-knob, .home-device-switch-knob {
+  border-radius: var(--radius-pill);
+  transition: all var(--transition-fast);
+}
+
+/* Sidebar & Topbar base */
+.app-sidebar,
+.home-sidebar,
+.settings-sidebar,
+.timer-sidebar {
+  background-color: var(--color-sidebar-bg);
+  border-right: 1px solid var(--color-border);
+}
+
+.app-topbar,
+.home-topbar,
+.settings-topbar,
+.timer-topbar {
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Topbar chung cho tất cả pages */
+.app-topbar,
+.home-topbar,
+.settings-topbar,
+.timer-topbar {
+  height: 74px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg);
+  gap: var(--spacing-md);
+  z-index: 90;
+}
+
+/* Left side của topbar */
+.app-topbar-left,
+.home-topbar-left,
+.settings-topbar-left,
+.timer-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.app-avatar,
+.home-avatar,
+.settings-avatar,
+.timer-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #e9c67b, #6bb5f3);
+  flex-shrink: 0;
+}
+
+.app-topbar-left h2,
+.home-topbar-left h2,
+.settings-topbar-left h2,
+.timer-topbar-left h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.app-topbar-right,
+.home-topbar-right,
+.settings-topbar-right,
+.timer-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Search box chung cho tất cả pages */
+.topbar-search-box {
+  width: 430px;          /* giống HomePage chuẩn Figma */
+  height: 44px;
+  border: 1px solid #cfd9e4;
+  border-radius: 22px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  color: #8d95a4;
+  transition: all var(--transition-fast);
+}
+
+.topbar-search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #475066;
+}
