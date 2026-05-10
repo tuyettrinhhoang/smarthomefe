@@ -1,108 +1,123 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/context/ThemeContext";
 import AppSidebar from "@/components/AppSidebar";
 import AccountMenu from "@/components/AccountMenu";
 import { UI } from "@/constants/ui";
-import {
-  Bell, Search, Star, Fan, Monitor, Camera, ChevronDown, Settings, Zap, Home,
-} from "lucide-react";
+import { Bell, Search, ChevronDown, Settings, Zap, Home } from "lucide-react";
+import { deviceService, toErrorMessage } from "@/services/api";
+import { useAppStore } from "@/store/appStore";
+import type { DeviceMode, DeviceStatusResponse, DeviceType } from "@/types";
 import "./all-devices.css";
 
-type Device = {
-  id: number;
-  name: string;
-  room: string;
-  consumption: string;
-  lastUsed: string;
-  status: "Hoạt động" | "Tắt";
-  active: boolean;
-  iconType: "star" | "fan" | "monitor" | "camera" | "blank";
-};
+type StatusFilter = "Tất cả thiết bị" | "Đang bật" | "Đang tắt";
 
-const initialDevices: Device[] = [
-  { id: 1, name: "Smart LED", room: "Phòng khách", consumption: "12W", lastUsed: "1 giờ trước", status: "Hoạt động", active: true, iconType: "star" },
-  { id: 2, name: "Smart Fan", room: "Phòng khách", consumption: "75W", lastUsed: "2 giờ trước", status: "Hoạt động", active: true, iconType: "fan" },
-  { id: 3, name: "Air Conditioner", room: "Phòng khách", consumption: "0W", lastUsed: "Hôm qua", status: "Tắt", active: false, iconType: "blank" },
-  { id: 4, name: "TV", room: "Phòng khách", consumption: "120W", lastUsed: "30 phút trước", status: "Hoạt động", active: true, iconType: "monitor" },
-  { id: 5, name: "Bedroom Light", room: "Phòng ngủ", consumption: "0W", lastUsed: "8 giờ trước", status: "Tắt", active: false, iconType: "star" },
-  { id: 6, name: "Ceiling Fan", room: "Phòng ngủ", consumption: "60W", lastUsed: "15 phút trước", status: "Hoạt động", active: true, iconType: "fan" },
-  { id: 7, name: "AC Unit", room: "Phòng ngủ", consumption: "1400W", lastUsed: "3 giờ trước", status: "Hoạt động", active: true, iconType: "blank" },
-  { id: 8, name: "Smart Speaker", room: "Phòng ngủ", consumption: "0W", lastUsed: "2 ngày trước", status: "Tắt", active: false, iconType: "blank" },
-  { id: 9, name: "Kitchen Light", room: "Phòng bếp", consumption: "18W", lastUsed: "1 giờ trước", status: "Hoạt động", active: true, iconType: "star" },
-  { id: 10, name: "Exhaust Fan", room: "Phòng bếp", consumption: "0W", lastUsed: "12 giờ trước", status: "Tắt", active: false, iconType: "blank" },
-  { id: 11, name: "Security Camera", room: "Phòng bếp", consumption: "8W", lastUsed: "10 phút trước", status: "Hoạt động", active: true, iconType: "camera" },
-  { id: 12, name: "Dining Light", room: "Nhà ăn", consumption: "0W", lastUsed: "3 ngày trước", status: "Tắt", active: false, iconType: "star" },
-  { id: 13, name: "Smart TV", room: "Nhà ăn", consumption: "0W", lastUsed: "4 ngày trước", status: "Tắt", active: false, iconType: "monitor" },
-  { id: 14, name: "Play Room Light", room: "Sân vườn", consumption: "25W", lastUsed: "4 giờ trước", status: "Hoạt động", active: true, iconType: "star" },
-  { id: 15, name: "Game Console", room: "Phòng khách", consumption: "150W", lastUsed: "6 giờ trước", status: "Hoạt động", active: true, iconType: "monitor" },
-];
+const statusOptions: StatusFilter[] = ["Tất cả thiết bị", "Đang bật", "Đang tắt"];
 
-const roomTabs = ["Tất Cả Phòng", "Phòng khách", "Phòng ngủ", "Nhà ăn", "Phòng bếp", "Sân vườn"] as const;
-const statusOptions = ["Tất cả thiết bị", "Đang bật", "Đang tắt"] as const;
-type StatusFilter = (typeof statusOptions)[number];
-type RoomFilter = (typeof roomTabs)[number];
+function DeviceCard({
+  device,
+  onToggleState,
+  onToggleMode,
+  isPending,
+}: {
+  device: DeviceStatusResponse;
+  onToggleState: (deviceType: DeviceType, currentState: "ON" | "OFF") => void;
+  onToggleMode: (deviceType: DeviceType, mode: DeviceMode) => void;
+  isPending: boolean;
+}) {
+  const isOn = device.state === "ON";
 
-function DeviceCard({ device, onToggle }: { device: Device; onToggle: (id: number) => void }) {
   return (
-    <div className={`device-card ${device.active ? "is-active" : "is-off"}`}>
+    <div className={`device-card ${isOn ? "is-active" : "is-off"}`}>
       <div className="device-card-top">
-        <div className={`device-icon-box ${device.active ? "active" : "off"}`}>
-          {renderDeviceIcon(device.iconType, device.active)}
+        <div className={`device-icon-box ${isOn ? "active" : "off"}`}>
+          <strong>{device.deviceType}</strong>
         </div>
         <button
-          className={`device-switch ${device.active ? "on" : "off"}`}
+          className={`device-switch ${isOn ? "on" : "off"}`}
           type="button"
-          onClick={() => onToggle(device.id)}
+          onClick={() => onToggleState(device.deviceType, device.state)}
+          disabled={isPending}
         >
           <span className="device-switch-knob" />
         </button>
       </div>
+
       <div className="device-main">
-        <h3>{device.name}</h3>
-        <p>{device.room}</p>
+        <h3>{device.deviceType}</h3>
+        <p>Mode: {device.mode}</p>
       </div>
+
       <div className="device-divider" />
+
       <div className="device-meta">
         <div className="meta-row">
-          <span>Tiêu thụ:</span>
-          <strong className={device.active ? "blue" : "muted"}>{device.consumption}</strong>
-        </div>
-        <div className="meta-row">
-          <span>Dùng lần cuối:</span>
-          <strong className="normal">{device.lastUsed}</strong>
-        </div>
-        <div className="meta-row">
           <span>Trạng thái:</span>
-          <strong className={device.active ? "green" : "normal"}>{device.active ? "Hoạt động" : "Tắt"}</strong>
+          <strong className={isOn ? "green" : "normal"}>{device.state}</strong>
         </div>
+        <div className="meta-row">
+          <span>Nguồn lệnh:</span>
+          <strong className="normal">{device.lastCommandSource || "--"}</strong>
+        </div>
+        <div className="meta-row">
+          <span>Cập nhật:</span>
+          <strong className="normal">{device.updatedAt ? new Date(device.updatedAt).toLocaleTimeString("vi-VN") : "--"}</strong>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+        <button
+          type="button"
+          className="room-tab"
+          onClick={() => onToggleMode(device.deviceType, device.mode === "AUTO" ? "MANUAL" : "AUTO")}
+          disabled={isPending}
+          style={{ flex: 1 }}
+        >
+          {device.mode === "AUTO" ? "Đổi sang MANUAL" : "Đổi sang AUTO"}
+        </button>
       </div>
     </div>
   );
-}
-
-function renderDeviceIcon(type: Device["iconType"], active: boolean) {
-  const className = "device-svg-icon";
-  if (!active && type === "blank") return <div className="device-placeholder-icon" />;
-  switch (type) {
-    case "star": return <Star className={className} size={UI.DEVICE_ICON_SIZE} />;
-    case "fan": return <Fan className={className} size={UI.DEVICE_ICON_SIZE} />;
-    case "monitor": return <Monitor className={className} size={UI.DEVICE_ICON_SIZE} />;
-    case "camera": return <Camera className={className} size={UI.DEVICE_ICON_SIZE} />;
-    default: return <div className="device-placeholder-icon" />;
-  }
 }
 
 export default function AllDevicesPage() {
   const { themeMode, toggleTheme } = useTheme();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const [devices, setDevices] = useState<Device[]>(initialDevices);
-  const [selectedRoom, setSelectedRoom] = useState<RoomFilter>("Tất Cả Phòng");
-  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("Tất cả thiết bị");
   const [searchTerm, setSearchTerm] = useState("");
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("Tất cả thiết bị");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [pendingDevice, setPendingDevice] = useState<DeviceType | null>(null);
+
+  const led = useAppStore((state) => state.led);
+  const fan = useAppStore((state) => state.fan);
+  const setDeviceStatus = useAppStore((state) => state.setDeviceStatus);
+  const setDashboard = useAppStore((state) => state.setDashboard);
+
+  const fetchDevices = useCallback(async () => {
+    try {
+      const [ledStatus, fanStatus] = await Promise.all([
+        deviceService.getStatus("LED"),
+        deviceService.getStatus("FAN"),
+      ]);
+      setDeviceStatus(ledStatus);
+      setDeviceStatus(fanStatus);
+      setError("");
+    } catch (err) {
+      setError(toErrorMessage(err, "Không thể tải trạng thái thiết bị"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setDeviceStatus]);
+
+  useEffect(() => {
+    fetchDevices();
+    const timer = window.setInterval(fetchDevices, 10000);
+    return () => window.clearInterval(timer);
+  }, [fetchDevices]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -114,27 +129,54 @@ export default function AllDevicesPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleToggleDevice = (id: number) => {
-    setDevices((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, active: !d.active, status: !d.active ? "Hoạt động" : "Tắt" } : d
-      )
-    );
+  const handleToggleState = async (deviceType: DeviceType, currentState: "ON" | "OFF") => {
+    setPendingDevice(deviceType);
+    try {
+      const nextState = currentState === "ON" ? "OFF" : "ON";
+      const updated = await deviceService.sendCommand(deviceType, {
+        state: nextState,
+        reason: "toggle from all devices page",
+      });
+      setDeviceStatus(updated);
+      setDashboard(null);
+      setError("");
+    } catch (err) {
+      setError(toErrorMessage(err, "Không thể gửi lệnh thiết bị"));
+    } finally {
+      setPendingDevice(null);
+    }
   };
 
+  const handleToggleMode = async (deviceType: DeviceType, mode: DeviceMode) => {
+    setPendingDevice(deviceType);
+    try {
+      const updated = await deviceService.updateMode(deviceType, { mode });
+      setDeviceStatus(updated);
+      setError("");
+    } catch (err) {
+      setError(toErrorMessage(err, "Không thể cập nhật mode thiết bị"));
+    } finally {
+      setPendingDevice(null);
+    }
+  };
+
+  const devices = useMemo(() => [led, fan].filter((d): d is DeviceStatusResponse => Boolean(d)), [led, fan]);
+
   const filteredDevices = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
     return devices.filter((d) => {
-      const matchRoom = selectedRoom === "Tất Cả Phòng" || d.room === selectedRoom;
-      const matchStatus = selectedStatus === "Tất cả thiết bị" || (selectedStatus === "Đang bật" && d.active) || (selectedStatus === "Đang tắt" && !d.active);
-      const keyword = searchTerm.trim().toLowerCase();
-      const matchSearch = keyword === "" || d.name.toLowerCase().includes(keyword) || d.room.toLowerCase().includes(keyword);
-      return matchRoom && matchStatus && matchSearch;
+      const matchesStatus =
+        selectedStatus === "Tất cả thiết bị" ||
+        (selectedStatus === "Đang bật" && d.state === "ON") ||
+        (selectedStatus === "Đang tắt" && d.state === "OFF");
+      const text = `${d.deviceType} ${d.mode} ${d.state}`.toLowerCase();
+      const matchesSearch = keyword === "" || text.includes(keyword);
+      return matchesStatus && matchesSearch;
     });
-  }, [devices, selectedRoom, selectedStatus, searchTerm]);
+  }, [devices, searchTerm, selectedStatus]);
 
   const totalDevices = devices.length;
-  const activeDevices = devices.filter((d) => d.active).length;
-  const activeRooms = new Set(devices.filter((d) => d.active).map((d) => d.room)).size;
+  const activeDevices = devices.filter((d) => d.state === "ON").length;
 
   return (
     <div className={`all-devices-page ${themeMode === "dark" ? "dark-mode" : ""}`}>
@@ -159,7 +201,7 @@ export default function AllDevicesPage() {
               <Search size={UI.TOPBAR_ICON_SIZE} />
               <input
                 type="text"
-                placeholder="Search any devices here"
+                placeholder="Tìm thiết bị theo type/mode/state"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -172,7 +214,8 @@ export default function AllDevicesPage() {
         <section className="content-wrap">
           <div className="page-heading">
             <h1>Tất Cả Thiết Bị</h1>
-            <p>Quản lý và điều khiển tất cả thiết bị trong nhà của bạn</p>
+            <p>Điều khiển thiết bị LED/FAN từ backend</p>
+            {error && <p style={{ color: "#d14343", marginTop: 8 }}>{error}</p>}
           </div>
 
           <section className="summary-grid">
@@ -186,17 +229,17 @@ export default function AllDevicesPage() {
             </div>
             <div className="summary-card">
               <div>
-                <p>Tiêu Thụ Hiện Tại</p>
-                <h3>1.87</h3>
-                <span>kW (kilowatts)</span>
+                <p>Thiết Bị Bật</p>
+                <h3>{activeDevices}</h3>
+                <span>Đang ON</span>
               </div>
               <div className="summary-icon soft"><Zap size={UI.TOPBAR_ICON_SIZE} /></div>
             </div>
             <div className="summary-card">
               <div>
                 <p>Phòng Đang Dùng</p>
-                <h3>{activeRooms}</h3>
-                <span>/ 5 phòng</span>
+                <h3>{activeDevices > 0 ? 1 : 0}</h3>
+                <span>/ 1 phòng</span>
               </div>
               <div className="summary-icon soft"><Home size={UI.TOPBAR_ICON_SIZE} /></div>
             </div>
@@ -204,13 +247,10 @@ export default function AllDevicesPage() {
 
           <section className="filter-panel">
             <div className="filter-left">
-              <h4>Chọn Phòng</h4>
+              <h4>Thiết bị hiện có</h4>
               <div className="room-tabs">
-                {roomTabs.map((room) => (
-                  <button key={room} className={`room-tab ${selectedRoom === room ? "active" : ""}`} type="button" onClick={() => setSelectedRoom(room)}>
-                    {room}
-                  </button>
-                ))}
+                <button className="room-tab active" type="button">LED</button>
+                <button className="room-tab active" type="button">FAN</button>
               </div>
             </div>
 
@@ -224,9 +264,14 @@ export default function AllDevicesPage() {
                 {showStatusMenu && (
                   <div className="status-dropdown-menu">
                     {statusOptions.map((option, i) => (
-                      <button key={option} type="button"
+                      <button
+                        key={option}
+                        type="button"
                         className={`status-dropdown-item ${selectedStatus === option ? "active" : ""} ${i < statusOptions.length - 1 ? "with-border" : ""}`}
-                        onClick={() => { setSelectedStatus(option); setShowStatusMenu(false); }}
+                        onClick={() => {
+                          setSelectedStatus(option);
+                          setShowStatusMenu(false);
+                        }}
                       >
                         {option}
                       </button>
@@ -238,8 +283,16 @@ export default function AllDevicesPage() {
           </section>
 
           <section className="device-grid">
+            {isLoading && <p>Đang tải dữ liệu thiết bị...</p>}
+            {!isLoading && filteredDevices.length === 0 && <p>Không có thiết bị phù hợp bộ lọc.</p>}
             {filteredDevices.map((device) => (
-              <DeviceCard key={device.id} device={device} onToggle={handleToggleDevice} />
+              <DeviceCard
+                key={device.deviceType}
+                device={device}
+                onToggleState={handleToggleState}
+                onToggleMode={handleToggleMode}
+                isPending={pendingDevice === device.deviceType}
+              />
             ))}
           </section>
         </section>

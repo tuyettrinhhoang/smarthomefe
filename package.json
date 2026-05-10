@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.6.2",
     "lucide-react": "^0.292.0",
