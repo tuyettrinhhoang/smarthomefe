@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { User, LogOut, ChevronRight } from "lucide-react";
+import { useAppStore } from "@/store/appStore";
 
 type AccountMenuProps = {
   onClose: () => void;
@@ -8,6 +9,7 @@ type AccountMenuProps = {
 
 export default function AccountMenu({ onClose, themeMode }: AccountMenuProps) {
   const navigate = useNavigate();
+  const logout = useAppStore((state) => state.logout);
 
   return (
     <div className={`account-menu ${themeMode === "dark" ? "dark-mode" : ""}`}>
@@ -37,7 +39,11 @@ export default function AccountMenu({ onClose, themeMode }: AccountMenuProps) {
       <button
         type="button"
         className="account-menu-item logout"
-        onClick={() => { navigate("/"); onClose(); }}
+        onClick={() => {
+          logout();
+          navigate("/");
+          onClose();
+        }}
       >
         <div className="account-menu-icon red">
           <LogOut size={24} />
